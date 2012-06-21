@@ -44,7 +44,9 @@ Acknowledgments
 ------
 
  The Ruby wrapper [libusb](https://github.com/larskanis/libusb)
+
  The [libusb](http://libusbx.org/) library
+
  Magtek reader script [https://github.com/aughey/magtek](https://github.com/aughey/magtek)
 
 License

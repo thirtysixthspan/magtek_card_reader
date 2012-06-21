@@ -1,0 +1,15 @@
+Gem::Specification.new do |s|
+  s.name        = 'magtek_card_reader'
+  s.version     = '1.0.0'
+  s.date        = '2012-06-20'
+  s.homepage    = 'http://github.com/thirtysixthspan/magtek_card_reader'
+  s.summary     = 'Magtek Credit Card Reader Library'
+  s.description = 'Provides a convenient wrapper around libusb to read credit cards with a Magtek Credit Card Reader.'
+  s.authors     = ['Derrick Parkhurst']
+  s.email       = 'derrick.parkhurst@gmail.com'
+  s.platform    = Gem::Platform::RUBY
+  s.files       = Dir.glob('{lib}/**/**/*')
+  s.require_paths = ['lib']
+  s.add_dependency 'libusb', '~>0.2.0'
+end
+

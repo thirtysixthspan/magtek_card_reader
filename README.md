@@ -10,7 +10,7 @@ Install
 -------
 Ubuntu
 ```
-sudo apt-get install libusb-dev
+sudo apt-get install libusb-1.0-0-dev
 
 gem install libusb magtek_card_reader
 

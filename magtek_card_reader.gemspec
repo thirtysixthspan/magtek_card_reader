@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name        = 'magtek_card_reader'
-  s.version     = '1.0.0'
+  s.version     = '1.0.1'
   s.date        = '2012-06-20'
   s.homepage    = 'http://github.com/thirtysixthspan/magtek_card_reader'
   s.summary     = 'Magtek Credit Card Reader Library'
@@ -8,7 +8,8 @@ Gem::Specification.new do |s|
   s.authors     = ['Derrick Parkhurst']
   s.email       = 'derrick.parkhurst@gmail.com'
   s.platform    = Gem::Platform::RUBY
-  s.files       = Dir.glob('{lib}/**/**/*')
+  s.files       = Dir.glob('{lib,bin}/**/**/*')
+  s.executables = Dir.glob('bin/*').map { |f| f.gsub(/bin\//,'') }
   s.require_paths = ['lib']
   s.add_dependency 'libusb', '~>0.2.0'
 end

@@ -1,0 +1,5 @@
+source :rubygems
+
+gem 'gibberish'
+gem 'rspec'
+gem 'magtek_card_reader'

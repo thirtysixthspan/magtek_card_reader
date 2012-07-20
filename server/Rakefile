@@ -1,0 +1,97 @@
+require 'yaml'
+require 'gibberish'
+require './lib/signature.rb'
+
+def ask question
+  print question
+  STDIN.gets.chomp
+end
+
+task :generate_keys do
+    
+  originator = ask "Please enter your full name: "
+  passphrase = ask "Please enter a long passphrase: "
+  
+  puts "Generating keys"
+  rsa_keys = Gibberish::RSA.generate_keypair(4096)
+
+  puts("Generating conf/secret.yaml")
+  enc_secret = { 
+      :timestamp => Time.now.to_i.to_s,
+      :originator => originator,
+      :rsa_key => rsa_keys.public_key.to_s,
+      :passphrase => passphrase
+  }
+  enc_secret[:sha512] = Gibberish::SHA512(enc_secret.sort.to_s)
+  enc_secret.delete(:passphrase)
+  
+  File.open('conf/secret.yaml', 'w') do |f|
+    f.write("# For maximum security this file should be read-only by the server process user")
+    YAML.dump(enc_secret, f)
+  end
+
+  puts("Generating conf/private.yaml")  
+  dec_private = { 
+      :timestamp => Time.now.to_i.to_s,
+      :originator => originator,
+      :rsa_key => rsa_keys.private_key.to_s,
+      :passphrase => passphrase
+  }
+  dec_private[:sha512] = Gibberish::SHA512(dec_private.sort.to_s)
+  dec_private.delete(:passphrase)
+    
+  File.open('conf/private.yaml', 'w') do |f|
+    f.write("# For maximum security do not store this file on the server")
+    YAML.dump(dec_private, f)
+  end
+
+  puts "Please move conf/private.yaml to another machine for maximum security."
+  puts "It is not needed on this server. It is only required to decrypt data."
+
+end
+
+
+task :verify_keys do
+    
+  fail "Cannot find secret configuration file" unless File.exists?('conf/secret.yaml')
+  secret_key = YAML.load(File.open('conf/secret.yaml','r'))
+
+  fail "Cannot find private configuration file" unless File.exists?('conf/private.yaml')
+  private_key = YAML.load(File.open('conf/private.yaml','r'))
+
+  passphrase = ask "Please enter the passphrase: "
+
+  if verify_signature(secret_key, passphrase) && verify_signature(private_key, passphrase)
+    puts "Signature Verified"
+  end
+
+end
+
+
+
+task :sign_callbacks do
+  
+  fail "Cannot find callback configuration file" unless File.exists?('conf/callbacks.yaml')
+  callbacks = YAML.load(File.open('conf/callbacks.yaml','r'))
+
+  originator = ask "Please enter your full name: "
+  passphrase = ask "Please enter a long passphrase: "
+    
+  
+  callbacks = add_signature(callbacks, passphrase, originator)
+  File.open("conf/callbacks.yaml",'w') { |f| YAML.dump(callbacks,f) }
+          
+end
+
+
+task :verify_callbacks do
+  
+  fail "Cannot find callback configuration file" unless File.exists?('conf/callbacks.yaml')
+  callbacks = YAML.load(File.open('conf/callbacks.yaml','r'))
+
+  passphrase = ask "Please enter the passphrase: "
+  if verify_signature(callbacks, passphrase)
+    puts "Signature verified."    
+  end     
+end
+

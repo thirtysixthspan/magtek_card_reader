@@ -40,6 +40,32 @@ mcr.close
 
 ```
 
+
+Server
+------
+
+ The server is a daemon that collects credit card swipe data from Magtek reader and runs
+configured callbacks in order to log the data or pass the data on to another server. 
+Credit card data is AES encrypted using a passphrase that must be provided when the 
+server is started. This passphrase is only stored in memory. The AES encypted data
+is then RSA encrypted using a private/public key pair. Only the public key is stored
+on the server permitting only encryption. The double encrypted data is stored either locally
+in a log or transmitted over a encrypted SSL connection to another server. The credit
+card data can only be decrypted if both the AES passphrase and the private RSA key are
+provided. The RSA key and callback parameters are combined with the AES passphrase and
+a digital signature is created using a SHA512 hash such that the AES passphrase must 
+be provided to use the RSA keys or make any callbacks.
+
+ To setup the server:
+- install necessary gems using 'bundle install'
+- choose a long AES passphrase
+- Generate RSA keys using 'rake generate_keys'
+- move conf/private.yaml off of the server to protect encryption
+- edit conf/callback.yaml.example providing local and/or remote callback endpoints
+- Sign the callbacks using 'rake sign_callbacks'
+- run credit_card_server with appropriate permissions to USB file descriptors (e.g., as root)
+
+
 Acknowledgments 
 ------
 

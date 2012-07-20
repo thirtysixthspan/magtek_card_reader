@@ -1,2 +1,6 @@
 .redcar
 .DS_Store
+server/logs/*
+server/conf/callbacks.yaml
+server/conf/secret.yaml
+server/conf/private.yaml

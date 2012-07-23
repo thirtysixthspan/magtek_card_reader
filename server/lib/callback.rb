@@ -38,12 +38,12 @@ class Callback
   end
   
   def post_to_server(data)
-    10.times do 
+    3.times do |t|
       begin
         response = RestClient.post @url, data
       rescue Exception => e
         log "Connection failed : #{e.message}"
-        sleep 6
+        sleep t
         next
       end
       if response.code == 200 && response.body == "accepted"
@@ -64,16 +64,12 @@ class Callback
   end
 
   def call(data)
-    @pid = fork { 
-      begin
-        log "Running Callback"
-        run(data);
-      rescue
-        log "Callback failed"
-      end  
-      Kernel.exit! 
-    }
-    Process.detach(@pid)
+    begin
+      log "Running Callback"
+      run(data);
+    rescue
+      log "Callback Failed"
+    end  
   end
 
 end

@@ -89,8 +89,7 @@ class CreditCardServer
     
   def run_callbacks(data)    
     @callbacks.each do |callback|    
-      time = Time.now.strftime('%Y-%m-%d %H:%M:%S')
-      log "[#{time}] #{callback.title}"
+      log "Running Callback: #{callback.title}"
       callback.call(data)
     end
   end

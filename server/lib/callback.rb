@@ -53,31 +53,12 @@ class Callback
     end
     log_fail "Timeout: Unable to contact server"
   end
-  
-  def log_to_file(data)
-    begin
-      FileUtils.touch(@url) unless File.exists?(@url)
-      File.open(@url,'a') do |f|
-        f.flock(File::LOCK_EX)
-        JSON.dump(data, f)
-        f.write("\n")
-        f.flock(File::LOCK_UN)
-      end
-      log "Data logged to #{@url}"
-      return true
-    rescue
-      log "Unable to log data to #{@url}"
-    end
-    false
-  end
-  
+    
   def run(data)
     open_logs()    
     log "Running callback"
     if @url.match('^https{0,1}://')
       post_to_server(data)
-    else
-      log_to_file(data)
     end
   end
 

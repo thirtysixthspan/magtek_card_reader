@@ -30,6 +30,7 @@ class CreditCardServer
     @verbose = false
     @logfile = 'logs/ccs.log'
     @errorfile = 'logs/ccs.error'
+    @callbacks = []
     
     @mcr = Magtek::CardReader.new
     fail "Cannot open card reader" unless @mcr.open
@@ -48,7 +49,7 @@ class CreditCardServer
   def load_callbacks()
     fail "Cannot find callback configuration file" unless File.exists?('conf/callbacks.yaml')
     callbacks = YAML.load(File.open('conf/callbacks.yaml'))
-    verify_signature(callbacks)
+    verify_signature(callbacks,@aes_passphrase)
     callbacks.each do |key,value|
       next if [:timestamp,:sha512,:originator].include?(key)
       callback = {
@@ -63,7 +64,7 @@ class CreditCardServer
   def load_secret()
     fail "Cannot find secret configuration file" unless File.exists?('conf/secret.yaml')
     secret = YAML.load(File.open('conf/secret.yaml'))
-    verify(secret)
+    verify_signature(secret,@aes_passphrase)
     @enc_secret = { 
       :aes_passphrase => @aes_passphrase,
       :rsa_key => secret[:rsa_public_key]
@@ -71,7 +72,7 @@ class CreditCardServer
   end  
   
   def read_card()
-    success, number, name, exp_year, exp_month =  mcr.read(:timeout=>0)
+    success, number, name, exp_year, exp_month =  @mcr.read(:timeout=>0)
     return unless success
     return if Time.now.year.to_i > exp_year.to_i
     return if Time.now.year.to_i == exp_year.to_i && Time.now.month.to_i > exp_month.to_i

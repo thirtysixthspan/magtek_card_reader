@@ -16,7 +16,8 @@ class CreditCardServer
   end
 
   def log(message)
-    puts message if @verbose
+    time = Time.now.strftime("%Y-%m-%d %H:%M")
+    puts "[#{time}] #{message}" if @verbose
   end
   
   def write_pid
@@ -56,7 +57,7 @@ class CreditCardServer
         :url => value
       }
       puts "Configuring callback #{callback['url']} on #{callback['title']}"
-      @callbacks << Callback.new(callback).verbose
+      @callbacks << Callback.new(callback)
     end
   end
   

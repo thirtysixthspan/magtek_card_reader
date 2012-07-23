@@ -13,7 +13,8 @@ class Callback
   end
 
   def log(message)
-    puts message if @verbose
+    time = Time.now.strftime("%Y-%m-%d %H:%M")
+    puts "[#{time}] #{message}" if @verbose
   end
 
   def log_fail(message)
@@ -63,7 +64,15 @@ class Callback
   end
 
   def call(data)
-    @pid = fork { run(data); Kernel.exit! }
+    @pid = fork { 
+      begin
+        log "Running Callback"
+        run(data);
+      rescue
+        log "Callback failed"
+      end  
+      Kernel.exit! 
+    }
     Process.detach(@pid)
   end
 

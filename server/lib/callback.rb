@@ -4,7 +4,7 @@ require 'json'
 
 class Callback
   
-  @@ivs = [:url]
+  @@ivs = [:url, :title]
   @@ivs.each { |v| attr_accessor v }
   
   def verbose

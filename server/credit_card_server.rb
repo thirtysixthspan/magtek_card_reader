@@ -3,7 +3,6 @@
 require 'yaml'
 require 'fileutils'
 require 'pp'
-require 'redis'
 require 'fileutils'
 require 'magtek_card_reader'
 require './lib/callback.rb'
@@ -57,7 +56,7 @@ class CreditCardServer
         :url => value
       }
       puts "Configuring callback #{callback['url']} on #{callback['title']}"
-      @callbacks << Callback.new(callback)
+      @callbacks << Callback.new(callback).verbose
     end
   end
   

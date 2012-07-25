@@ -74,9 +74,9 @@ class CreditCardServer
   
   def read_card()
     success, number, name, exp_year, exp_month =  @mcr.read(:timeout=>0)
-    return unless success
-    return if Time.now.year.to_i > exp_year.to_i
-    return if Time.now.year.to_i == exp_year.to_i && Time.now.month.to_i > exp_month.to_i
+    return false unless success
+    return false if Time.now.year.to_i > exp_year.to_i+2000
+    return false if Time.now.year.to_i == exp_year.to_i+2000 && Time.now.month.to_i > exp_month.to_i
 
     data = {
       :timestamp => Time.now.to_i.to_s,

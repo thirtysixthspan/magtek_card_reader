@@ -54,7 +54,8 @@ class CreditCardServer
       next if [:timestamp,:sha512,:originator].include?(key)
       callback = {
         :title => key,
-        :url => value
+        :url => value,
+        :passphrase => @aes_passphrase
       }
       puts "Configuring callback #{callback['url']} on #{callback['title']}"
       @callbacks << Callback.new(callback)

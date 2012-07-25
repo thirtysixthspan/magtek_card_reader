@@ -8,12 +8,16 @@ describe "Callback" do
     @testlog = '/tmp/callback_test.log'
   end
   
-  it "writes to file" do
-    FileUtils.rm @testlog if File.exists?(@testlog)
-    cb = Callback.new(:url=>'/tmp/callback_test.log')
-    cb.run(:timestamp => Time.now.to_i, :data => 'test')
+  it "posts to remote server" do
+    response = {'status' => 'swipe accepted'}.to_json
+    response.extend RestClient::Response
+    response.stub(:code).and_return(200)
+    RestClient.stub(:post).and_return(response)
     
-    File.exists?(@testlog).should == true
+    cb = Callback.new(:title => 'remote', 
+                      :url=>'https://test.com', 
+                      :passphrase => 'this is a test passphrase')
+    cb.run('test').should == true    
   end
 
   it "fails when server incorrectly responds" do
@@ -22,23 +26,13 @@ describe "Callback" do
     response.stub(:code).and_return(404)
     RestClient.stub(:post).and_return(response)
         
-    cb = Callback.new(:url=>'https://test.com')
-    expect {
-      cb.run(:timestamp => Time.now.to_i, :data => 'test')
-    }.to raise_error(Exception)
+    cb = Callback.new(:title => 'remote', 
+                      :url=>'https://test.com', 
+                      :passphrase => 'this is a test passphrase')
+    cb.run('test').should == false
   end
   
   
-  it "posts to remote server" do
-    response = "accepted"
-    response.extend RestClient::Response
-    response.stub(:code).and_return(200)
-    RestClient.stub(:post).and_return(response)
-    
-    cb = Callback.new(:url=>'https://test.com')
-    cb.run(:timestamp => Time.now.to_i, :data => 'test')
-    
-  end
     
 
 end

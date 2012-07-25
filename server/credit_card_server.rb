@@ -68,7 +68,7 @@ class CreditCardServer
     verify_signature(secret,@aes_passphrase)
     @enc_secret = { 
       :aes_passphrase => @aes_passphrase,
-      :rsa_key => secret[:rsa_public_key]
+      :rsa_key => secret[:rsa_key]
     }
   end  
   
@@ -118,8 +118,8 @@ class CreditCardServer
       load_secret()
       loop do
         open_logs()
-        data = read_card()
-        run_callbacks(data)  
+        credit_card = read_card()
+        run_callbacks(credit_card.encrypt)  
       end  
     end
     Process.detach(pid)

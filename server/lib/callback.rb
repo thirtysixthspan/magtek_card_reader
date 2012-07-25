@@ -34,7 +34,7 @@ class Callback
   end
   
   def post_to_server(data)
-    signed_query = add_signature({:data => data},@passphrase).to_json
+    signed_query = add_signature({:data => data},@passphrase)
     
     3.times do |t|
       begin

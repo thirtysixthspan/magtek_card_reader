@@ -1,6 +1,9 @@
 module Magtek
 
   class CardReader
+
+    # number of bytes expected from the reader on a swipe
+    MAXBUFLEN = 337
     
     def initialize(product_id = nil)
       product_id = Magtek.available_devices.first unless product_id
@@ -36,25 +39,33 @@ module Magtek
     end
   
     def read(options)
+      buffer, buffer_length, successful = "", 0, true # initial assumptions
       timeout = options[:timeout] || 5000
-  
-      @interrupt_transfer = LIBUSB::InterruptTransfer.new
-      @interrupt_transfer.dev_handle = @handle
-      @interrupt_transfer.endpoint = @endpoint
-      @interrupt_transfer.alloc_buffer(337)
-      @interrupt_transfer.timeout = timeout
+      # allow loose buffer length checking, but default to original to ensure backward compatibility
+      required_buffer_length = options[:required_buffer_length] || MAXBUFLEN
+
       begin
-        @interrupt_transfer.submit_and_wait!
+        buffer = @handle.interrupt_transfer({ endpoint: @endpoint, dataIn: MAXBUFLEN, timeout: timeout})
+        buffer_length = buffer.length
       rescue => e
         @handle.reset_device unless e.message == "error TRANSFER_TIMED_OUT"
-        return false
+        successful = false
       end
-      return false unless @interrupt_transfer.actual_length==337
-  
-      match = /B([0-9]{16})\^(.*)\^([0-9]{2})([0-9]{2})/.match(@interrupt_transfer.actual_buffer)
-      return false unless match
-  
-      number, name, exp_year, exp_month = match.captures
+
+      if successful 
+        if required_buffer_length > 0 && buffer_length != required_buffer_length
+          successful = false
+        else
+          match = /B([0-9]{16})\^(.*)\^([0-9]{2})([0-9]{2})/.match(buffer)
+          if match
+            number, name, exp_year, exp_month = match.captures
+          else
+            successful = false
+          end
+        end
+      end
+
+      return false if !successful
       return [true, number, name, exp_year, exp_month]
     end
   

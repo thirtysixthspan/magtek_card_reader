@@ -11,6 +11,6 @@ Gem::Specification.new do |s|
   s.files       = Dir.glob('{lib,bin}/**/**/*')
   s.executables = Dir.glob('bin/*').map { |f| f.gsub(/bin\//,'') }
   s.require_paths = ['lib']
-  s.add_dependency 'libusb', '~>0.2.0'
+  s.add_dependency 'libusb', '~>1.0.0'
 end
 

@@ -1,7 +1,7 @@
 Gem::Specification.new do |s|
   s.name        = 'magtek_card_reader'
-  s.version     = '1.0.1'
-  s.date        = '2012-06-20'
+  s.version     = '1.0.2'
+  s.date        = '2019-06-12'
   s.homepage    = 'http://github.com/thirtysixthspan/magtek_card_reader'
   s.summary     = 'Magtek Credit Card Reader Library'
   s.description = 'Provides a convenient wrapper around libusb to read credit cards with a Magtek Credit Card Reader.'

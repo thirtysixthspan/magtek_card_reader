@@ -8,7 +8,7 @@ module Magtek
     def initialize(product_id = nil)
       product_id = Magtek.available_devices.first unless product_id
       @usb = LIBUSB::Context.new
-      @device = @usb.devices(:idVendor => 0x0801, :idProduct => product_id).first
+      @device = @usb.devices(:idVendor => Magtek.vendors, :idProduct => product_id).first
       fail "Device not found" unless @device
       @interface = @device.interfaces.first
       fail "Interface not found" unless @interface
@@ -19,7 +19,7 @@ module Magtek
   
     def open
       close
-      begin 
+      begin
         @handle = @device.open
         @handle.detach_kernel_driver(0) if @handle.kernel_driver_active?(0)
         @handle.set_configuration(1)  
@@ -45,9 +45,21 @@ module Magtek
       required_buffer_length = options[:required_buffer_length] || MAXBUFLEN
 
       begin
+        started_at = Process.clock_gettime(Process::CLOCK_MONOTONIC)
         buffer = @handle.interrupt_transfer({ endpoint: @endpoint, dataIn: MAXBUFLEN, timeout: timeout})
+        
+        # skip over the bogus stuff from the brush sidewinder
+        while buffer.bytes == [96, 13, 0, 16] do
+          current_at = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+          if (current_at - started_at) * 1000 > timeout
+            fail "error TRANSFER_TIMED_OUT"
+          end
+          buffer = @handle.interrupt_transfer({ endpoint: @endpoint, dataIn: MAXBUFLEN, timeout: timeout})
+        end
+        
         buffer_length = buffer.length
       rescue => e
+        #puts "magtek_card_reader - problem #{e}"
         @handle.reset_device unless e.message == "error TRANSFER_TIMED_OUT"
         successful = false
       end

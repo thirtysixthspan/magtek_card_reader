@@ -3,7 +3,7 @@ module Magtek
   class CardReader
 
     # number of bytes expected from the reader on a swipe
-    MAXBUFLEN = 337
+    MAXBUFLEN = 512
     
     def initialize(product_id = nil)
       product_id = Magtek.available_devices.first unless product_id

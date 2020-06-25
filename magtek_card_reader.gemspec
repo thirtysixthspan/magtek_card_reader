@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name        = 'magtek_card_reader'
-  s.version     = '1.0.3'
+  s.version     = '1.0.4'
   s.date        = '2020-06-16'
   s.homepage    = 'http://github.com/thirtysixthspan/magtek_card_reader'
   s.summary     = 'Magtek Credit Card Reader Library'

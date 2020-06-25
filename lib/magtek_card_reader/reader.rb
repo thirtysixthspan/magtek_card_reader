@@ -84,7 +84,7 @@ module Magtek
       end
 
       return false if !successful
-      return [true, number, name, exp_year, exp_month]
+      return [true, number, name, exp_year, exp_month, buffer]
     end
   
   end

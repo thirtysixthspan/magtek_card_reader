@@ -1,12 +1,17 @@
 module Magtek
 
   class CardReader
-    
+
     def initialize(product_id = nil)
       product_id = Magtek.available_devices.first unless product_id
       @usb = LIBUSB::Context.new
-      @device = @usb.devices(:idVendor => 0x0801, :idProduct => product_id).first
+      @device = @usb.devices(:idVendor => Magtek.vendors, :idProduct => product_id).first
       fail "Device not found" unless @device
+
+      # number of bytes expected from the reader on a swipe
+      @maxbuflen = 887 # magtek insert card reader
+      @maxbuflen = 337 if @device.idProduct == 0xc256 # sidewinder
+
       @interface = @device.interfaces.first
       fail "Interface not found" unless @interface
       @endpoint = @interface.endpoints.first
@@ -16,11 +21,11 @@ module Magtek
   
     def open
       close
-      begin 
+      begin
         @handle = @device.open
-        @handle.detach_kernel_driver(0) if @handle.kernel_driver_active?(0)
+        @handle.detach_kernel_driver(@interface) if @handle.kernel_driver_active?(@interface)
         @handle.set_configuration(1)  
-        @handle.claim_interface(0) 
+        @handle.claim_interface(@interface)
         @open = true
         return true 
       rescue
@@ -30,32 +35,56 @@ module Magtek
   
     def close
       return true unless @open 
-      @handle.release_interface(0)
+      @handle.release_interface(@interface)
       @handle.close 
       true
     end
   
     def read(options)
+      buffer, buffer_length, successful = "", 0, true # initial assumptions
       timeout = options[:timeout] || 5000
-  
-      @interrupt_transfer = LIBUSB::InterruptTransfer.new
-      @interrupt_transfer.dev_handle = @handle
-      @interrupt_transfer.endpoint = @endpoint
-      @interrupt_transfer.alloc_buffer(337)
-      @interrupt_transfer.timeout = timeout
+      # allow loose buffer length checking, but default to original to ensure backward compatibility
+      required_buffer_length = options[:required_buffer_length]
+
       begin
-        @interrupt_transfer.submit_and_wait!
+        started_at = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+        buffer = @handle.interrupt_transfer({ endpoint: @endpoint, dataIn: @maxbuflen, timeout: timeout})
+# puts "magtek_card_reader - initial data #{buffer.bytes}"
+        # skip over the bogus stuff from the brush sidewinder
+        while buffer.bytes == [96, 13, 0, 16] do
+          current_at = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+          if (current_at - started_at) * 1000 > timeout
+            fail "error TRANSFER_TIMED_OUT"
+          end
+          buffer = @handle.interrupt_transfer({ endpoint: @endpoint, dataIn: @maxbuflen, timeout: timeout})
+        end
+# puts "magtek_card_reader - final data, #{buffer.length}:  #{buffer.bytes}"
+# puts "#{buffer}"
+
+        buffer_length = buffer.length
       rescue => e
+        puts "magtek_card_reader - problem #{e}"
         @handle.reset_device unless e.message == "error TRANSFER_TIMED_OUT"
-        return false
+        successful = false
       end
-      return false unless @interrupt_transfer.actual_length==337
-  
-      match = /B([0-9]{16})\^(.*)\^([0-9]{2})([0-9]{2})/.match(@interrupt_transfer.actual_buffer)
-      return false unless match
-  
-      number, name, exp_year, exp_month = match.captures
-      return [true, number, name, exp_year, exp_month]
+
+      if successful 
+        if required_buffer_length > 0 && buffer_length != required_buffer_length
+          successful = false
+          puts "magtek_card_reader - failed buffer length check #{required_buffer_length}, #{buffer_length}"
+        else
+          match = /B([0-9]{16})\^(.*?)\^([0-9]{2})([0-9]{2})/.match(buffer)
+          if match
+            number, name, exp_year, exp_month = match.captures
+          else
+            successful = false
+            puts "magtek_card_reader - failed regex match"
+          end
+        end
+      end
+
+      return false if !successful
+      return [true, number, name, exp_year, exp_month, buffer]
     end
   
   end

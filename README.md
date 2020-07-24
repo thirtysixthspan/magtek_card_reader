@@ -4,7 +4,7 @@ Magtek Card Reader
 Overview
 --------
 
- This gem provides a wrapper around libusb to facilite reading credit card information from a Magtek Credit Card Reader.
+ This gem provides a wrapper around libusb to facilite reading credit card information from a Magtek Credit Card Reader, or a Brush Sidewinder.
 
 Install
 -------
@@ -22,6 +22,12 @@ Notes
 
 You must have appropriate permissions to the USB file descriptors.  This may be accomplished by adding a line to your udev rules as follows:
 `ATTRS{idVendor}=="0801", ATTRS{idProduct}=="0002", MODE="666", GROUP="plugdev"` and adding the user to the _plugdev_ group.  Please note that your _idProduct_ may differ.
+
+Or you can add `/etc/udev/rules.d/90-usbpermission.rules` that contains
+
+```
+SUBSYSTEM=="usb", GROUP="plugdev", MODE="0666"
+```
 
 
 Example

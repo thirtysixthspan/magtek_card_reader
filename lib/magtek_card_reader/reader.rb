@@ -36,11 +36,20 @@ module Magtek
     def close
       return true unless @open 
       @handle.release_interface(@interface)
-      @handle.close 
+      @handle.close
+      @open = false
       true
     end
   
     def read(options)
+      if @handle.nil?
+        puts "magtek_card_reader - read called while @handle is nil, attempting to open"
+        if !open
+          puts "magtek_card_reader - unable to open reader when trying to read"
+          return false
+        end
+      end
+
       buffer, buffer_length, successful = "", 0, true # initial assumptions
       timeout = options[:timeout] || 5000
       # allow loose buffer length checking, but default to original to ensure backward compatibility
